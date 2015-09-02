@@ -1,8 +1,11 @@
-(function () {
-    'use strict';
+var Extension = require('../extension');
+var Util = require('../util');
+class KeyboardCommands extends Extension {
 
-    var KeyboardCommands = MediumEditor.Extension.extend({
-        name: 'keyboard-commands',
+  constructor(opts) {
+      super(opts);
+
+        this.name = opts.name ? opts.name : 'keyboard-commands';
 
         /* KeyboardCommands Options */
 
@@ -15,7 +18,7 @@
          *   shift [boolean] (whether the shift key has to be active or inactive)
          *   alt [boolean] (whether the alt key has to be active or inactive)
          */
-        commands: [
+        this.commands = opts.commands ? opts.comands : [
             {
                 command: 'bold',
                 key: 'B',
@@ -37,48 +40,44 @@
                 shift: false,
                 alt: false
             }
-        ],
+        ];
 
-        init: function () {
-            MediumEditor.Extension.prototype.init.apply(this, arguments);
-
-            this.subscribe('editableKeydown', this.handleKeydown.bind(this));
-            this.keys = {};
-            this.commands.forEach(function (command) {
-                var keyCode = command.key.charCodeAt(0);
-                if (!this.keys[keyCode]) {
-                    this.keys[keyCode] = [];
-                }
-                this.keys[keyCode].push(command);
-            }, this);
-        },
-
-        handleKeydown: function (event) {
-            var keyCode = MediumEditor.util.getKeyCode(event);
+        this.subscribe('editableKeydown', this.handleKeydown.bind(this));
+        this.keys = {};
+        this.commands.forEach(function (command) {
+            var keyCode = command.key.charCodeAt(0);
             if (!this.keys[keyCode]) {
-                return;
+                this.keys[keyCode] = [];
             }
+            this.keys[keyCode].push(command);
+        }, this);
+    }
 
-            var isMeta = MediumEditor.util.isMetaCtrlKey(event),
-                isShift = !!event.shiftKey,
-                isAlt = !!event.altKey;
-
-            this.keys[keyCode].forEach(function (data) {
-                if (data.meta === isMeta &&
-                    data.shift === isShift &&
-                    (data.alt === isAlt ||
-                     undefined === data.alt)) { // TODO deprecated: remove check for undefined === data.alt when jumping to 6.0.0
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    // command can be false so the shortcut is just disabled
-                    if (false !== data.command) {
-                        this.execAction(data.command);
-                    }
-                }
-            }, this);
+    handleKeydown(event) {
+        var keyCode = Util.getKeyCode(event);
+        if (!this.keys[keyCode]) {
+            return;
         }
-    });
 
-    MediumEditor.extensions.keyboardCommands = KeyboardCommands;
-}());
+        var isMeta = Util.isMetaCtrlKey(event),
+            isShift = !!event.shiftKey,
+            isAlt = !!event.altKey;
+
+        this.keys[keyCode].forEach(function (data) {
+            if (data.meta === isMeta &&
+                data.shift === isShift &&
+                (data.alt === isAlt ||
+                 undefined === data.alt)) { // TODO deprecated: remove check for undefined === data.alt when jumping to 6.0.0
+                event.preventDefault();
+                event.stopPropagation();
+
+                // command can be false so the shortcut is just disabled
+                if (false !== data.command) {
+                    this.execAction(data.command);
+                }
+            }
+        }, this);
+    }
+}
+
+module.exports = KeyboardCommands;

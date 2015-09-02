@@ -1,10 +1,11 @@
-(function () {
-    'use strict';
 
     var CLASS_DRAG_OVER = 'medium-editor-dragover';
 
+    var Util = require('../util');
+    var Extension = require('../extension');
+
     function clearClassNames(element) {
-        var editable = MediumEditor.util.getContainerEditorElement(element),
+        var editable = Util.getContainerEditorElement(element),
             existing = Array.prototype.slice.call(editable.parentElement.querySelectorAll('.' + CLASS_DRAG_OVER));
 
         existing.forEach(function (el) {
@@ -12,19 +13,21 @@
         });
     }
 
-    var FileDragging = MediumEditor.Extension.extend({
-        name: 'fileDragging',
+    class FileDragging extends Extension {
 
-        allowedTypes: ['image'],
 
-        init: function () {
-            MediumEditor.Extension.prototype.init.apply(this, arguments);
+      constructor(opts) {
+          super(opts);
+
+            this.name = opts.name ? opts.name : 'fileDragging';
+
+            this.allowedTypes = opts.allowedTypes ? opts.allowedTypes : ['image'];
 
             this.subscribe('editableDrag', this.handleDrag.bind(this));
             this.subscribe('editableDrop', this.handleDrop.bind(this));
-        },
+        }
 
-        handleDrag: function (event) {
+        handleDrag(event) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'copy';
 
@@ -36,9 +39,9 @@
             if (event.type === 'dragover') {
                 target.classList.add(CLASS_DRAG_OVER);
             }
-        },
+        }
 
-        handleDrop: function (event) {
+        handleDrop(event) {
             // Prevent file from opening in the current window
             event.preventDefault();
             event.stopPropagation();
@@ -57,20 +60,20 @@
 
             // Make sure we remove our class from everything
             clearClassNames(event.target);
-        },
+        }
 
-        isAllowedFile: function (file) {
+        isAllowedFile(file) {
             return this.allowedTypes.some(function (fileType) {
                 return !!file.type.match(fileType);
             });
-        },
+        }
 
-        insertImageFile: function (file) {
+        insertImageFile(file) {
             var fileReader = new FileReader();
             fileReader.readAsDataURL(file);
 
             var id = 'medium-img-' + (+new Date());
-            MediumEditor.util.insertHTMLCommand(this.document, '<img class="medium-editor-image-loading" id="' + id + '" />');
+            Util.insertHTMLCommand(this.document, '<img class="medium-editor-image-loading" id="' + id + '" />');
 
             fileReader.onload = function () {
                 var img = this.document.getElementById(id);
@@ -81,7 +84,6 @@
                 }
             }.bind(this);
         }
-    });
+    }
 
-    MediumEditor.extensions.fileDragging = FileDragging;
-}());
+    module.exports = FileDragging;

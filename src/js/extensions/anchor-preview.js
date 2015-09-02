@@ -1,34 +1,37 @@
-(function () {
-    'use strict';
 
-    var AnchorPreview = MediumEditor.Extension.extend({
-        name: 'anchor-preview',
+    var Extension = require('../extension');
+    var Util = require('../util');
+    class AnchorPreview extends Extension {
 
-        // Anchor Preview Options
 
-        /* hideDelay: [number]  (previously options.anchorPreviewHideDelay)
-         * time in milliseconds to show the anchor tag preview after the mouse has left the anchor tag.
-         */
-        hideDelay: 500,
+      constructor(opts) {
+          super(opts);
+          this.name = opts.name ? opts.name : 'anchor-preview';
 
-        /* previewValueSelector: [string]
-         * the default selector to locate where to put the activeAnchor value in the preview
-         */
-        previewValueSelector: 'a',
+          // Anchor Preview Options
 
-        init: function () {
+          /* hideDelay: [number]  (previously options.anchorPreviewHideDelay)
+           * time in milliseconds to show the anchor tag preview after the mouse has left the anchor tag.
+           */
+          this.hideDelay = opts.hideDelay ? opts.hideDelay : 500;
+
+          /* previewValueSelector: [string]
+           * the default selector to locate where to put the activeAnchor value in the preview
+           */
+          this.previewValueSelector = opts.previewValueSelector ? opts.previewValueSelector : 'a';
+
             this.anchorPreview = this.createPreview();
 
             this.getEditorOption('elementsContainer').appendChild(this.anchorPreview);
 
             this.attachToEditables();
-        },
+        }
 
-        getPreviewElement: function () {
+        getPreviewElement() {
             return this.anchorPreview;
-        },
+        }
 
-        createPreview: function () {
+        createPreview() {
             var el = this.document.createElement('div');
 
             el.id = 'medium-editor-anchor-preview-' + this.getEditorId();
@@ -38,29 +41,29 @@
             this.on(el, 'click', this.handleClick.bind(this));
 
             return el;
-        },
+        }
 
-        getTemplate: function () {
+        getTemplate() {
             return '<div class="medium-editor-toolbar-anchor-preview" id="medium-editor-toolbar-anchor-preview">' +
                 '    <a class="medium-editor-toolbar-anchor-preview-inner"></a>' +
                 '</div>';
-        },
+        }
 
-        destroy: function () {
+        destroy() {
             if (this.anchorPreview) {
                 if (this.anchorPreview.parentNode) {
                     this.anchorPreview.parentNode.removeChild(this.anchorPreview);
                 }
                 delete this.anchorPreview;
             }
-        },
+        }
 
-        hidePreview: function () {
+        hidePreview() {
             this.anchorPreview.classList.remove('medium-editor-anchor-preview-active');
             this.activeAnchor = null;
-        },
+        }
 
-        showPreview: function (anchorEl) {
+        showPreview(anchorEl) {
             if (this.anchorPreview.classList.contains('medium-editor-anchor-preview-active') ||
                     anchorEl.getAttribute('data-disable-preview')) {
                 return true;
@@ -84,9 +87,9 @@
             this.attachPreviewHandlers();
 
             return this;
-        },
+        }
 
-        positionPreview: function (activeAnchor) {
+        positionPreview(activeAnchor) {
             activeAnchor = activeAnchor || this.activeAnchor;
             var buttonHeight = this.anchorPreview.offsetHeight,
                 boundary = activeAnchor.getBoundingClientRect(),
@@ -112,13 +115,13 @@
             } else {
                 this.anchorPreview.style.left = defaultLeft + middleBoundary + 'px';
             }
-        },
+        }
 
-        attachToEditables: function () {
+        attachToEditables() {
             this.subscribe('editableMouseover', this.handleEditableMouseover.bind(this));
-        },
+        }
 
-        handleClick: function (event) {
+        handleClick(event) {
             var anchorExtension = this.base.getExtensionByName('anchor'),
                 activeAnchor = this.activeAnchor;
 
@@ -143,16 +146,16 @@
             }
 
             this.hidePreview();
-        },
+        }
 
-        handleAnchorMouseout: function () {
+        handleAnchorMouseout() {
             this.anchorToPreview = null;
             this.off(this.activeAnchor, 'mouseout', this.instanceHandleAnchorMouseout);
             this.instanceHandleAnchorMouseout = null;
-        },
+        }
 
-        handleEditableMouseover: function (event) {
-            var target = MediumEditor.util.getClosestTag(event.target, 'a');
+        handleEditableMouseover(event) {
+            var target = Util.getClosestTag(event.target, 'a');
 
             if (false === target) {
                 return;
@@ -188,20 +191,20 @@
                     this.showPreview(this.anchorToPreview);
                 }
             }.bind(this));
-        },
+        }
 
-        handlePreviewMouseover: function () {
+        handlePreviewMouseover() {
             this.lastOver = (new Date()).getTime();
             this.hovering = true;
-        },
+        }
 
-        handlePreviewMouseout: function (event) {
+        handlePreviewMouseout(event) {
             if (!event.relatedTarget || !/anchor-preview/.test(event.relatedTarget.className)) {
                 this.hovering = false;
             }
-        },
+        }
 
-        updatePreview: function () {
+        updatePreview() {
             if (this.hovering) {
                 return true;
             }
@@ -210,9 +213,9 @@
                 // hide the preview 1/2 second after mouse leaves the link
                 this.detachPreviewHandlers();
             }
-        },
+        }
 
-        detachPreviewHandlers: function () {
+        detachPreviewHandlers() {
             // cleanup
             clearInterval(this.intervalTimer);
             if (this.instanceHandlePreviewMouseover) {
@@ -227,10 +230,10 @@
             this.hidePreview();
 
             this.hovering = this.instanceHandlePreviewMouseover = this.instanceHandlePreviewMouseout = null;
-        },
+        }
 
         // TODO: break up method and extract out handlers
-        attachPreviewHandlers: function () {
+        attachPreviewHandlers() {
             this.lastOver = (new Date()).getTime();
             this.hovering = true;
 
@@ -244,7 +247,6 @@
             this.on(this.activeAnchor, 'mouseover', this.instanceHandlePreviewMouseover);
             this.on(this.activeAnchor, 'mouseout', this.instanceHandlePreviewMouseout);
         }
-    });
+    }
 
-    MediumEditor.extensions.anchorPreview = AnchorPreview;
-}());
+  module.exports = AnchorPreview;

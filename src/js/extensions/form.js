@@ -1,26 +1,24 @@
-(function () {
-    'use strict';
-
     /* Base functionality for an extension which will display
      * a 'form' inside the toolbar
      */
-    var FormExtension = MediumEditor.extensions.button.extend({
+    var Button = require('./button');
+    class Form extends Button {
 
-        init: function () {
-            MediumEditor.extensions.button.prototype.init.apply(this, arguments);
-        },
+      constructor(options) {
+          super(options);
 
-        // default labels for the form buttons
-        formSaveLabel: '&#10003;',
-        formCloseLabel: '&times;',
+          // default labels for the form buttons
+          this.formSaveLabel = '&#10003;';
+          this.formCloseLabel = '&times;';
 
-        /* hasForm: [boolean]
-         *
-         * Setting this to true will cause getForm() to be called
-         * when the toolbar is created, so the form can be appended
-         * inside the toolbar container
-         */
-        hasForm: true,
+          /* hasForm: [boolean]
+           *
+           * Setting this to true will cause getForm() to be called
+           * when the toolbar is created, so the form can be appended
+           * inside the toolbar container
+           */
+          this.hasForm = true;
+        }
 
         /* getForm: [function ()]
          *
@@ -29,21 +27,21 @@
          * the toolbar container. The form should start hidden, and
          * the extension can choose when to hide/show it
          */
-        getForm: function () {},
+        getForm() {}
 
         /* isDisplayed: [function ()]
          *
          * This function should return true/false reflecting
          * whether the form is currently displayed
          */
-        isDisplayed: function () {},
+        isDisplayed() {}
 
         /* hideForm: [function ()]
          *
          * This function should hide the form element inside
          * the toolbar container
          */
-        hideForm: function () {},
+        hideForm() {}
 
         /************************ Helpers ************************
          * The following are helpers that are either set by MediumEditor
@@ -57,12 +55,12 @@
          * Helper method which will turn back the toolbar after canceling
          * the customized form
          */
-        showToolbarDefaultActions: function () {
+        showToolbarDefaultActions() {
             var toolbar = this.base.getExtensionByName('toolbar');
             if (toolbar) {
                 toolbar.showToolbarDefaultActions();
             }
-        },
+        }
 
         /* hideToolbarDefaultActions: [function ()]
          *
@@ -70,12 +68,12 @@
          * toolbar, but leave the toolbar container in the same state
          * to allow a form to display its custom contents inside the toolbar
          */
-        hideToolbarDefaultActions: function () {
+        hideToolbarDefaultActions() {
             var toolbar = this.base.getExtensionByName('toolbar');
             if (toolbar) {
                 toolbar.hideToolbarDefaultActions();
             }
-        },
+        }
 
         /* setToolbarPosition: [function ()]
          *
@@ -83,13 +81,12 @@
          * of the toolbar based on the toolbar content and the current
          * position of the user's selection
          */
-        setToolbarPosition: function () {
+        setToolbarPosition() {
             var toolbar = this.base.getExtensionByName('toolbar');
             if (toolbar) {
                 toolbar.setToolbarPosition();
             }
         }
-    });
+    }
 
-    MediumEditor.extensions.form = FormExtension;
-})();
+    module.exports = Form;

@@ -1,81 +1,85 @@
-(function () {
-    'use strict';
+var Extension = require('../extension');
+var Util = require('../util');
+var Selection = require('../selection');
+    class Toolbar extends Extension {
 
-    var Toolbar = MediumEditor.Extension.extend({
-        name: 'toolbar',
 
-        /* Toolbar Options */
+      constructor(opts) {
+          super(opts);
 
-        /* align: ['left'|'center'|'right']
-         * When the __static__ option is true, this aligns the static toolbar
-         * relative to the medium-editor element.
-         */
-        align: 'center',
+          this.name = opts.name ? opts.name : 'toolbar';
 
-        /* allowMultiParagraphSelection: [boolean]
-         * enables/disables whether the toolbar should be displayed when
-         * selecting multiple paragraphs/block elements
-         */
-        allowMultiParagraphSelection: true,
+          /* Toolbar Options */
 
-        /* buttons: [Array]
-         * the names of the set of buttons to display on the toolbar.
-         */
-        buttons: ['bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'quote'],
+          /* align: ['left'|'center'|'right']
+           * When the __static__ option is true, this aligns the static toolbar
+           * relative to the medium-editor element.
+           */
+          this.align = opts.align ? opts.align : 'center';
 
-        /* diffLeft: [Number]
-         * value in pixels to be added to the X axis positioning of the toolbar.
-         */
-        diffLeft: 0,
+          /* allowMultiParagraphSelection: [boolean]
+           * enables/disables whether the toolbar should be displayed when
+           * selecting multiple paragraphs/block elements
+           */
+          this.allowMultiParagraphSelection = opts.allowMultiParagraphSelection ? opts.allowMultiParagraphSelection : true;
 
-        /* diffTop: [Number]
-         * value in pixels to be added to the Y axis positioning of the toolbar.
-         */
-        diffTop: -10,
+          /* buttons: [Array]
+           * the names of the set of buttons to display on the toolbar.
+           */
+          this.buttons =  opts.buttons ? opts.buttons : ['bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'quote'];
 
-        /* firstButtonClass: [string]
-         * CSS class added to the first button in the toolbar.
-         */
-        firstButtonClass: 'medium-editor-button-first',
+          /* diffLeft: [Number]
+           * value in pixels to be added to the X axis positioning of the toolbar.
+           */
+          this.diffLeft = opts.diffLeft ? opts.diffLeft : 0;
 
-        /* lastButtonClass: [string]
-         * CSS class added to the last button in the toolbar.
-         */
-        lastButtonClass: 'medium-editor-button-last',
+          /* diffTop: [Number]
+           * value in pixels to be added to the Y axis positioning of the toolbar.
+           */
+          this.diffTop = opts.diffTop ? opts.diffTop : -10;
 
-        /* standardizeSelectionStart: [boolean]
-         * enables/disables standardizing how the beginning of a range is decided
-         * between browsers whenever the selected text is analyzed for updating toolbar buttons status.
-         */
-        standardizeSelectionStart: false,
+          /* firstButtonClass: [string]
+           * CSS class added to the first button in the toolbar.
+           */
+          this.firstButtonClass = opts.firstButtonClass ? opts.firstButtonClass : 'medium-editor-button-first';
 
-        /* static: [boolean]
-         * enable/disable the toolbar always displaying in the same location
-         * relative to the medium-editor element.
-         */
-        static: false,
+          /* lastButtonClass: [string]
+           * CSS class added to the last button in the toolbar.
+           */
+          this.lastButtonClass = opts.lastButtonClass ? opts.lastButtonClass : 'medium-editor-button-last';
 
-        /* sticky: [boolean]
-         * When the __static__ option is true, this enables/disables the toolbar
-         * "sticking" to the viewport and staying visible on the screen while
-         * the page scrolls.
-         */
-        sticky: false,
+          /* standardizeSelectionStart: [boolean]
+           * enables/disables standardizing how the beginning of a range is decided
+           * between browsers whenever the selected text is analyzed for updating toolbar buttons status.
+           */
+          this.standardizeSelectionStart = opts.standardizeSelectionStart ? opts.standardizeSelectionStart : false;
 
-        /* updateOnEmptySelection: [boolean]
-         * When the __static__ option is true, this enables/disables updating
-         * the state of the toolbar buttons even when the selection is collapsed
-         * (there is no selection, just a cursor).
-         */
-        updateOnEmptySelection: false,
+          /* static: [boolean]
+           * enable/disable the toolbar always displaying in the same location
+           * relative to the medium-editor element.
+           */
+          this.static = opts.static ? opts.static : false;
 
-        /* relativeContainer: [node]
-         * appending the toolbar to a given node instead of body
-         */
-        relativeContainer: null,
+          /* sticky: [boolean]
+           * When the __static__ option is true, this enables/disables the toolbar
+           * "sticking" to the viewport and staying visible on the screen while
+           * the page scrolls.
+           */
+          this.sticky = opts.sticky ? opts.sticky : false;
 
-        init: function () {
-            MediumEditor.Extension.prototype.init.apply(this, arguments);
+          /* updateOnEmptySelection: [boolean]
+           * When the __static__ option is true, this enables/disables updating
+           * the state of the toolbar buttons even when the selection is collapsed
+           * (there is no selection, just a cursor).
+           */
+          this.updateOnEmptySelection = opts.updateOnEmptySelection ? opts.updateOnEmptySelection : false;
+
+          /* relativeContainer: [node]
+           * appending the toolbar to a given node instead of body
+           */
+          this.relativeContainer = opts.relativeContainer ? opts.relativeContainer : null;
+
+
 
             this.initThrottledMethods();
 
@@ -84,21 +88,21 @@
             } else {
                 this.relativeContainer.appendChild(this.getToolbarElement());
             }
-        },
+        }
 
         // Helper method to execute method for every extension, but ignoring the toolbar extension
-        forEachExtension: function (iterator, context) {
+        forEachExtension(iterator, context) {
             return this.base.extensions.forEach(function (command) {
                 if (command === this) {
                     return;
                 }
                 return iterator.apply(context || this, arguments);
             }, this);
-        },
+        }
 
         // Toolbar creation/deletion
 
-        createToolbar: function () {
+        createToolbar() {
             var toolbar = this.document.createElement('div');
 
             toolbar.id = 'medium-editor-toolbar-' + this.getEditorId();
@@ -124,9 +128,9 @@
             this.attachEventHandlers();
 
             return toolbar;
-        },
+        }
 
-        createToolbarButtons: function () {
+        createToolbarButtons() {
             var ul = this.document.createElement('ul'),
                 li,
                 btn,
@@ -155,7 +159,7 @@
                 if (extension && typeof extension.getButton === 'function') {
                     btn = extension.getButton(this.base);
                     li = this.document.createElement('li');
-                    if (MediumEditor.util.isElement(btn)) {
+                    if (Util.isElement(btn)) {
                         li.appendChild(btn);
                     } else {
                         li.innerHTML = btn;
@@ -171,45 +175,45 @@
             }
 
             return ul;
-        },
+        }
 
-        destroy: function () {
+        destroy() {
             if (this.toolbar) {
                 if (this.toolbar.parentNode) {
                     this.toolbar.parentNode.removeChild(this.toolbar);
                 }
                 delete this.toolbar;
             }
-        },
+        }
 
         // Toolbar accessors
 
-        getToolbarElement: function () {
+        getToolbarElement() {
             if (!this.toolbar) {
                 this.toolbar = this.createToolbar();
             }
 
             return this.toolbar;
-        },
+        }
 
-        getToolbarActionsElement: function () {
+        getToolbarActionsElement() {
             return this.getToolbarElement().querySelector('.medium-editor-toolbar-actions');
-        },
+        }
 
         // Toolbar event handlers
 
-        initThrottledMethods: function () {
+        initThrottledMethods() {
             // throttledPositionToolbar is throttled because:
             // - It will be called when the browser is resizing, which can fire many times very quickly
             // - For some event (like resize) a slight lag in UI responsiveness is OK and provides performance benefits
-            this.throttledPositionToolbar = MediumEditor.util.throttle(function () {
+            this.throttledPositionToolbar = Util.throttle(function () {
                 if (this.base.isActive) {
                     this.positionToolbarIfShown();
                 }
             }.bind(this));
-        },
+        }
 
-        attachEventHandlers: function () {
+        attachEventHandlers() {
             // MediumEditor custom events for when user beings and ends interaction with a contenteditable and its elements
             this.subscribe('blur', this.handleBlur.bind(this));
             this.subscribe('focus', this.handleFocus.bind(this));
@@ -229,39 +233,39 @@
 
             // On resize, re-position the toolbar
             this.on(this.window, 'resize', this.handleWindowResize.bind(this));
-        },
+        }
 
-        handleWindowScroll: function () {
+        handleWindowScroll() {
             this.positionToolbarIfShown();
-        },
+        }
 
-        handleWindowResize: function () {
+        handleWindowResize() {
             this.throttledPositionToolbar();
-        },
+        }
 
-        handleDocumentMouseup: function (event) {
+        handleDocumentMouseup(event) {
             // Do not trigger checkState when mouseup fires over the toolbar
             if (event &&
                     event.target &&
-                    MediumEditor.util.isDescendant(this.getToolbarElement(), event.target)) {
+                    Util.isDescendant(this.getToolbarElement(), event.target)) {
                 return false;
             }
             this.checkState();
-        },
+        }
 
-        handleEditableClick: function () {
+        handleEditableClick() {
             // Delay the call to checkState to handle bug where selection is empty
             // immediately after clicking inside a pre-existing selection
             setTimeout(function () {
                 this.checkState();
             }.bind(this), 0);
-        },
+        }
 
-        handleEditableKeyup: function () {
+        handleEditableKeyup() {
             this.checkState();
-        },
+        }
 
-        handleBlur: function () {
+        handleBlur() {
             // Kill any previously delayed calls to hide the toolbar
             clearTimeout(this.hideTimeout);
 
@@ -273,44 +277,44 @@
             this.hideTimeout = setTimeout(function () {
                 this.hideToolbar();
             }.bind(this), 1);
-        },
+        }
 
-        handleFocus: function () {
+        handleFocus() {
             this.checkState();
-        },
+        }
 
         // Hiding/showing toolbar
 
-        isDisplayed: function () {
+        isDisplayed() {
             return this.getToolbarElement().classList.contains('medium-editor-toolbar-active');
-        },
+        }
 
-        showToolbar: function () {
+        showToolbar() {
             clearTimeout(this.hideTimeout);
             if (!this.isDisplayed()) {
                 this.getToolbarElement().classList.add('medium-editor-toolbar-active');
                 this.trigger('showToolbar', {}, this.base.getFocusedElement());
             }
-        },
+        }
 
-        hideToolbar: function () {
+        hideToolbar() {
             if (this.isDisplayed()) {
                 this.getToolbarElement().classList.remove('medium-editor-toolbar-active');
                 this.trigger('hideToolbar', {}, this.base.getFocusedElement());
             }
-        },
+        }
 
-        isToolbarDefaultActionsDisplayed: function () {
+        isToolbarDefaultActionsDisplayed() {
             return this.getToolbarActionsElement().style.display === 'block';
-        },
+        }
 
-        hideToolbarDefaultActions: function () {
+        hideToolbarDefaultActions() {
             if (this.isToolbarDefaultActionsDisplayed()) {
                 this.getToolbarActionsElement().style.display = 'none';
             }
-        },
+        }
 
-        showToolbarDefaultActions: function () {
+        showToolbarDefaultActions() {
             this.hideExtensionForms();
 
             if (!this.isToolbarDefaultActionsDisplayed()) {
@@ -322,30 +326,30 @@
             this.delayShowTimeout = this.base.delay(function () {
                 this.showToolbar();
             }.bind(this));
-        },
+        }
 
-        hideExtensionForms: function () {
+        hideExtensionForms() {
             // Hide all extension forms
             this.forEachExtension(function (extension) {
                 if (extension.hasForm && extension.isDisplayed()) {
                     extension.hideForm();
                 }
             });
-        },
+        }
 
         // Responding to changes in user selection
 
         // Checks for existance of multiple block elements in the current selection
-        multipleBlockElementsSelected: function () {
+        multipleBlockElementsSelected() {
             var regexEmptyHTMLTags = /<[^\/>][^>]*><\/[^>]+>/gim, // http://stackoverflow.com/questions/3129738/remove-empty-tags-using-regex
-                regexBlockElements = new RegExp('<(' + MediumEditor.util.blockContainerElementNames.join('|') + ')[^>]*>', 'g'),
-                selectionHTML = MediumEditor.selection.getSelectionHtml(this.document).replace(regexEmptyHTMLTags, ''), // Filter out empty blocks from selection
+                regexBlockElements = new RegExp('<(' + Util.blockContainerElementNames.join('|') + ')[^>]*>', 'g'),
+                selectionHTML = Selection.getSelectionHtml(this.document).replace(regexEmptyHTMLTags, ''), // Filter out empty blocks from selection
                 hasMultiParagraphs = selectionHTML.match(regexBlockElements); // Find how many block elements are within the html
 
             return !!hasMultiParagraphs && hasMultiParagraphs.length > 1;
-        },
+        }
 
-        modifySelection: function () {
+        modifySelection() {
             var selection = this.window.getSelection(),
                 selectionRange = selection.getRangeAt(0);
 
@@ -368,19 +372,19 @@
             if (this.standardizeSelectionStart &&
                     selectionRange.startContainer.nodeValue &&
                     (selectionRange.startOffset === selectionRange.startContainer.nodeValue.length)) {
-                var adjacentNode = MediumEditor.util.findAdjacentTextNodeWithContent(MediumEditor.selection.getSelectionElement(this.window), selectionRange.startContainer, this.document);
+                var adjacentNode = Util.findAdjacentTextNodeWithContent(Selection.getSelectionElement(this.window), selectionRange.startContainer, this.document);
                 if (adjacentNode) {
                     var offset = 0;
                     while (adjacentNode.nodeValue.substr(offset, 1).trim().length === 0) {
                         offset = offset + 1;
                     }
-                    selectionRange = MediumEditor.selection.select(this.document, adjacentNode, offset,
+                    selectionRange = Selection.select(this.document, adjacentNode, offset,
                         selectionRange.endContainer, selectionRange.endOffset);
                 }
             }
-        },
+        }
 
-        checkState: function () {
+        checkState() {
             if (this.base.preventSelectionUpdates) {
                 return;
             }
@@ -388,14 +392,14 @@
             // If no editable has focus OR selection is inside contenteditable = false
             // hide toolbar
             if (!this.base.getFocusedElement() ||
-                    MediumEditor.selection.selectionInContentEditableFalse(this.window)) {
+                    Selection.selectionInContentEditableFalse(this.window)) {
                 return this.hideToolbar();
             }
 
             // If there's no selection element, selection element doesn't belong to this editor
             // or toolbar is disabled for this selection element
             // hide toolbar
-            var selectionElement = MediumEditor.selection.getSelectionElement(this.window);
+            var selectionElement = Selection.getSelectionElement(this.window);
             if (!selectionElement ||
                     this.getEditorElements().indexOf(selectionElement) === -1 ||
                     selectionElement.getAttribute('data-disable-toolbar')) {
@@ -416,19 +420,19 @@
             }
 
             this.showAndUpdateToolbar();
-        },
+        }
 
         // Updating the toolbar
 
-        showAndUpdateToolbar: function () {
+        showAndUpdateToolbar() {
             this.modifySelection();
             this.setToolbarButtonStates();
             this.trigger('positionToolbar', {}, this.base.getFocusedElement());
             this.showToolbarDefaultActions();
             this.setToolbarPosition();
-        },
+        }
 
-        setToolbarButtonStates: function () {
+        setToolbarButtonStates() {
             this.forEachExtension(function (extension) {
                 if (typeof extension.isActive === 'function' &&
                     typeof extension.setInactive === 'function') {
@@ -437,12 +441,12 @@
             });
 
             this.checkActiveButtons();
-        },
+        }
 
-        checkActiveButtons: function () {
+        checkActiveButtons() {
             var manualStateChecks = [],
                 queryState = null,
-                selectionRange = MediumEditor.selection.getSelectionRange(this.document),
+                selectionRange = Selection.getSelectionRange(this.document),
                 parentNode,
                 updateExtensionState = function (extension) {
                     if (typeof extension.checkState === 'function') {
@@ -478,11 +482,11 @@
                 manualStateChecks.push(extension);
             });
 
-            parentNode = MediumEditor.selection.getSelectedParentElement(selectionRange);
+            parentNode = Selection.getSelectedParentElement(selectionRange);
 
             // Make sure the selection parent isn't outside of the contenteditable
             if (!this.getEditorElements().some(function (element) {
-                    return MediumEditor.util.isDescendant(element, parentNode, true);
+                    return Util.isDescendant(element, parentNode, true);
                 })) {
                 return;
             }
@@ -492,22 +496,22 @@
                 manualStateChecks.forEach(updateExtensionState);
 
                 // we can abort the search upwards if we leave the contentEditable element
-                if (MediumEditor.util.isMediumEditorElement(parentNode)) {
+                if (Util.isMediumEditorElement(parentNode)) {
                     break;
                 }
                 parentNode = parentNode.parentNode;
             }
-        },
+        }
 
         // Positioning toolbar
 
-        positionToolbarIfShown: function () {
+        positionToolbarIfShown() {
             if (this.isDisplayed()) {
                 this.setToolbarPosition();
             }
-        },
+        }
 
-        setToolbarPosition: function () {
+        setToolbarPosition() {
             var container = this.base.getFocusedElement(),
                 selection = this.window.getSelection(),
                 anchorPreview;
@@ -534,9 +538,9 @@
             if (anchorPreview && typeof anchorPreview.hidePreview === 'function') {
                 anchorPreview.hidePreview();
             }
-        },
+        }
 
-        positionStaticToolbar: function (container) {
+        positionStaticToolbar(container) {
             // position the toolbar at left 0, so we can get the real width of the toolbar
             this.getToolbarElement().style.left = '0';
 
@@ -593,9 +597,9 @@
             }
 
             toolbarElement.style.left = targetLeft + 'px';
-        },
+        }
 
-        positionToolbar: function (selection) {
+        positionToolbar(selection) {
             // position the toolbar at left 0, so we can get the real width of the toolbar
             this.getToolbarElement().style.left = '0';
 
@@ -628,7 +632,6 @@
                 toolbarElement.style.left = defaultLeft + middleBoundary + 'px';
             }
         }
-    });
+    }
 
-    MediumEditor.extensions.toolbar = Toolbar;
-}());
+    module.exports = Toolbar;

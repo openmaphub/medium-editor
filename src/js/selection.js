@@ -1,16 +1,18 @@
-(function () {
-    'use strict';
 
-    function filterOnlyParentElements(node) {
-        if (MediumEditor.util.isBlockContainer(node)) {
-            return NodeFilter.FILTER_ACCEPT;
-        } else {
-            return NodeFilter.FILTER_SKIP;
+
+
+
+    class Selection {
+
+        static filterOnlyParentElements(node) {
+            if (Selection.isBlockContainer(node)) {
+                return NodeFilter.FILTER_ACCEPT;
+            } else {
+                return NodeFilter.FILTER_SKIP;
+            }
         }
-    }
 
-    var Selection = {
-        findMatchingSelectionParent: function (testElementFunction, contentWindow) {
+        static findMatchingSelectionParent(testElementFunction, contentWindow) {
             var selection = contentWindow.getSelection(),
                 range,
                 current;
@@ -22,18 +24,18 @@
             range = selection.getRangeAt(0);
             current = range.commonAncestorContainer;
 
-            return MediumEditor.util.traverseUp(current, testElementFunction);
-        },
+            return Selection.traverseUp(current, testElementFunction);
+        }
 
-        getSelectionElement: function (contentWindow) {
-            return this.findMatchingSelectionParent(function (el) {
-                return MediumEditor.util.isMediumEditorElement(el);
+        static getSelectionElement(contentWindow) {
+            return Selection.findMatchingSelectionParent(function (el) {
+                return Selection.isMediumEditorElement(el);
             }, contentWindow);
-        },
+        }
 
         // http://stackoverflow.com/questions/17678843/cant-restore-selection-after-html-modify-even-if-its-the-same-html
         // Tim Down
-        exportSelection: function (root, doc) {
+        static exportSelection(root, doc) {
             if (!root) {
                 return null;
             }
@@ -51,12 +53,12 @@
                 start = preSelectionRange.toString().length;
 
                 selectionState = {
-                    start: start,
+                    start,
                     end: start + range.toString().length
                 };
                 // If start = 0 there may still be an empty paragraph before it, but we don't care.
                 if (start !== 0) {
-                    var emptyBlocksIndex = this.getIndexRelativeToAdjacentEmptyBlocks(doc, root, range.startContainer, range.startOffset);
+                    var emptyBlocksIndex = Selection.getIndexRelativeToAdjacentEmptyBlocks(doc, root, range.startContainer, range.startOffset);
                     if (emptyBlocksIndex !== -1) {
                         selectionState.emptyBlocksIndex = emptyBlocksIndex;
                     }
@@ -64,7 +66,7 @@
             }
 
             return selectionState;
-        },
+        }
 
         // http://stackoverflow.com/questions/17678843/cant-restore-selection-after-html-modify-even-if-its-the-same-html
         // Tim Down
@@ -76,7 +78,7 @@
         //      subsequent to an anchor tag if it would otherwise be placed right at the trailing edge inside the
         //      anchor. This cursor positioning, even though visually equivalent to the user, can affect behavior
         //      in MS IE.
-        importSelection: function (selectionState, root, doc, favorLaterSelectionAnchor) {
+        static importSelection(selectionState, root, doc, favorLaterSelectionAnchor) {
             if (!selectionState || !root) {
                 return;
             }
@@ -117,28 +119,28 @@
             }
 
             if (typeof selectionState.emptyBlocksIndex !== 'undefined') {
-                range = this.importSelectionMoveCursorPastBlocks(doc, root, selectionState.emptyBlocksIndex, range);
+                range = Selection.importSelectionMoveCursorPastBlocks(doc, root, selectionState.emptyBlocksIndex, range);
             }
 
             // If the selection is right at the ending edge of a link, put it outside the anchor tag instead of inside.
             if (favorLaterSelectionAnchor) {
-                range = this.importSelectionMoveCursorPastAnchor(selectionState, range);
+                range = Selection.importSelectionMoveCursorPastAnchor(selectionState, range);
             }
 
             var sel = doc.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
-        },
+        }
 
         // Utility method called from importSelection only
-        importSelectionMoveCursorPastAnchor: function (selectionState, range) {
+        static importSelectionMoveCursorPastAnchor(selectionState, range) {
             var nodeInsideAnchorTagFunction = function (node) {
                 return node.nodeName.toLowerCase() === 'a';
             };
             if (selectionState.start === selectionState.end &&
                     range.startContainer.nodeType === 3 &&
                     range.startOffset === range.startContainer.nodeValue.length &&
-                    MediumEditor.util.traverseUp(range.startContainer, nodeInsideAnchorTagFunction)) {
+                    Selection.traverseUp(range.startContainer, nodeInsideAnchorTagFunction)) {
                 var prevNode = range.startContainer,
                     currentNode = range.startContainer.parentNode;
                 while (currentNode !== null && currentNode.nodeName.toLowerCase() !== 'a') {
@@ -161,12 +163,12 @@
                 }
             }
             return range;
-        },
+        }
 
         // Uses the emptyBlocksIndex calculated by getIndexRelativeToAdjacentEmptyBlocks
         // to move the cursor back to the start of the correct paragraph
-        importSelectionMoveCursorPastBlocks: function (doc, root, index, range) {
-            var treeWalker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, filterOnlyParentElements, false),
+        static importSelectionMoveCursorPastBlocks(doc, root, index, range) {
+            var treeWalker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, Selection.filterOnlyParentElements, false),
                 startContainer = range.startContainer,
                 startBlock,
                 targetNode,
@@ -177,10 +179,10 @@
             // If the selection is inside one of these text nodes, and it has a previous sibling
             // which is a block element, we want the treewalker to start at the previous sibling
             // and NOT at the parent of the textnode
-            if (startContainer.nodeType === 3 && MediumEditor.util.isBlockContainer(startContainer.previousSibling)) {
+            if (startContainer.nodeType === 3 && Selection.isBlockContainer(startContainer.previousSibling)) {
                 startBlock = startContainer.previousSibling;
             } else {
-                startBlock = MediumEditor.util.getClosestBlockContainer(startContainer);
+                startBlock = Selection.getClosestBlockContainer(startContainer);
             }
 
             // Skip over empty blocks until we hit the block we want the selection to be in
@@ -206,17 +208,17 @@
 
             // We're selecting a high-level block node, so make sure the cursor gets moved into the deepest
             // element at the beginning of the block
-            range.setStart(MediumEditor.util.getFirstSelectableLeafNode(targetNode), 0);
+            range.setStart(Selection.getFirstSelectableLeafNode(targetNode), 0);
 
             return range;
-        },
+        }
 
         // Returns -1 unless the cursor is at the beginning of a paragraph/block
         // If the paragraph/block is preceeded by empty paragraphs/block (with no text)
         // it will return the number of empty paragraphs before the cursor.
         // Otherwise, it will return 0, which indicates the cursor is at the beginning
         // of a paragraph/block, and not at the end of the paragraph/block before it
-        getIndexRelativeToAdjacentEmptyBlocks: function (doc, root, cursorContainer, cursorOffset) {
+        static getIndexRelativeToAdjacentEmptyBlocks(doc, root, cursorContainer, cursorOffset) {
             // If there is text in front of the cursor, that means there isn't only empty blocks before it
             if (cursorContainer.textContent.length > 0 && cursorOffset > 0) {
                 return -1;
@@ -227,14 +229,14 @@
             if (node.nodeType !== 3) {
                 node = cursorContainer.childNodes[cursorOffset];
             }
-            if (node && !MediumEditor.util.isElementAtBeginningOfBlock(node)) {
+            if (node && !Selection.isElementAtBeginningOfBlock(node)) {
                 return -1;
             }
 
             // Walk over block elements, counting number of empty blocks between last piece of text
             // and the block the cursor is in
-            var closestBlock = MediumEditor.util.getClosestBlockContainer(cursorContainer),
-                treeWalker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, filterOnlyParentElements, false),
+            var closestBlock = Selection.getClosestBlockContainer(cursorContainer),
+                treeWalker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, Selection.filterOnlyParentElements, false),
                 emptyBlocksCount = 0;
             while (treeWalker.nextNode()) {
                 var blockIsEmpty = treeWalker.currentNode.textContent === '';
@@ -250,14 +252,14 @@
             }
 
             return emptyBlocksCount;
-        },
+        }
 
-        selectionInContentEditableFalse: function (contentWindow) {
+        static selectionInContentEditableFalse(contentWindow) {
             // determine if the current selection is exclusively inside
             // a contenteditable="false", though treat the case of an
             // explicit contenteditable="true" inside a "false" as false.
             var sawtrue,
-                sawfalse = this.findMatchingSelectionParent(function (el) {
+                sawfalse = Selection.findMatchingSelectionParent(function (el) {
                     var ce = el && el.getAttribute('contenteditable');
                     if (ce === 'true') {
                         sawtrue = true;
@@ -266,11 +268,11 @@
                 }, contentWindow);
 
             return !sawtrue && sawfalse;
-        },
+        }
 
         // http://stackoverflow.com/questions/4176923/html-of-selected-text
         // by Tim Down
-        getSelectionHtml: function getSelectionHtml(doc) {
+        static getSelectionHtml(doc) {
             var i,
                 html = '',
                 sel = doc.getSelection(),
@@ -284,7 +286,7 @@
                 html = container.innerHTML;
             }
             return html;
-        },
+        }
 
         /**
          *  Find the caret position within an element irrespective of any inline tags it may contain.
@@ -293,7 +295,7 @@
          *  @param {Range} A Range representing cursor position. Will window.getSelection if none is passed.
          *  @return {Object} 'left' and 'right' attributes contain offsets from begining and end of Element
          */
-        getCaretOffsets: function getCaretOffsets(element, range) {
+        static getCaretOffsets(element, range) {
             var preCaretRange, postCaretRange;
 
             if (!range) {
@@ -313,23 +315,23 @@
                 left: preCaretRange.toString().length,
                 right: postCaretRange.toString().length
             };
-        },
+        }
 
         // http://stackoverflow.com/questions/15867542/range-object-get-selection-parent-node-chrome-vs-firefox
-        rangeSelectsSingleNode: function (range) {
+        static rangeSelectsSingleNode(range) {
             var startNode = range.startContainer;
             return startNode === range.endContainer &&
                 startNode.hasChildNodes() &&
                 range.endOffset === range.startOffset + 1;
-        },
+        }
 
-        getSelectedParentElement: function (range) {
+        static getSelectedParentElement(range) {
             if (!range) {
                 return null;
             }
 
             // Selection encompasses a single element
-            if (this.rangeSelectsSingleNode(range) && range.startContainer.childNodes[range.startOffset].nodeType !== 3) {
+            if (Selection.rangeSelectsSingleNode(range) && range.startContainer.childNodes[range.startOffset].nodeType !== 3) {
                 return range.startContainer.childNodes[range.startOffset];
             }
 
@@ -340,9 +342,9 @@
 
             // Selection starts inside an element
             return range.startContainer;
-        },
+        }
 
-        getSelectedElements: function (doc) {
+        static getSelectedElements(doc) {
             var selection = doc.getSelection(),
                 range,
                 toRet,
@@ -368,18 +370,18 @@
             return [].filter.call(range.commonAncestorContainer.getElementsByTagName('*'), function (el) {
                 return (typeof selection.containsNode === 'function') ? selection.containsNode(el, true) : true;
             });
-        },
+        }
 
-        selectNode: function (node, doc) {
+        static selectNode(node, doc) {
             var range = doc.createRange(),
                 sel = doc.getSelection();
 
             range.selectNodeContents(node);
             sel.removeAllRanges();
             sel.addRange(range);
-        },
+        }
 
-        select: function (doc, startNode, startOffset, endNode, endOffset) {
+        static select(doc, startNode, startOffset, endNode, endOffset) {
             doc.getSelection().removeAllRanges();
             var range = doc.createRange();
             range.setStart(startNode, startOffset);
@@ -390,7 +392,7 @@
             }
             doc.getSelection().addRange(range);
             return range;
-        },
+        }
 
         /**
          * Move cursor to the given node with the given offset.
@@ -399,27 +401,115 @@
          * @param  {DomElement}  node    Element where to jump
          * @param  {integer}     offset  Where in the element should we jump, 0 by default
          */
-        moveCursor: function (doc, node, offset) {
-            this.select(doc, node, offset);
-        },
+        static moveCursor(doc, node, offset) {
+            Selection.select(doc, node, offset);
+        }
 
-        getSelectionRange: function (ownerDocument) {
+        static getSelectionRange(ownerDocument) {
             var selection = ownerDocument.getSelection();
             if (selection.rangeCount === 0) {
                 return null;
             }
             return selection.getRangeAt(0);
-        },
+        }
 
         // http://stackoverflow.com/questions/1197401/how-can-i-get-the-element-the-caret-is-in-with-javascript-when-using-contentedi
         // by You
-        getSelectionStart: function (ownerDocument) {
+        static getSelectionStart(ownerDocument) {
             var node = ownerDocument.getSelection().anchorNode,
                 startNode = (node && node.nodeType === 3 ? node.parentNode : node);
 
             return startNode;
         }
-    };
 
-    MediumEditor.selection = Selection;
-}());
+
+        //Copy of Util functions
+        //TODO: figure out why the Util class won't load in Selection
+
+        static traverseUp(current, testElementFunction) {
+            if (!current) {
+                return false;
+            }
+
+            do {
+                if (current.nodeType === 1) {
+                    if (testElementFunction(current)) {
+                        return current;
+                    }
+                    // do not traverse upwards past the nearest containing editor
+                    if (Selection.isMediumEditorElement(current)) {
+                        return false;
+                    }
+                }
+
+                current = current.parentNode;
+            } while (current);
+
+            return false;
+        }
+
+        static isMediumEditorElement(element) {
+            return element && element.getAttribute && !!element.getAttribute('data-medium-editor-element');
+        }
+        static blockContainerElementNames(){
+          return [
+            // elements our editor generates
+            'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'ul', 'li', 'ol',
+            // all other known block elements
+            'address', 'article', 'aside', 'audio', 'canvas', 'dd', 'dl', 'dt', 'fieldset',
+            'figcaption', 'figure', 'footer', 'form', 'header', 'hgroup', 'main', 'nav',
+            'noscript', 'output', 'section', 'table', 'tbody', 'tfoot', 'video'
+        ]
+      }
+
+        static isBlockContainer(element) {
+            return element && element.nodeType !== 3 && Selection.blockContainerElementNames().indexOf(element.nodeName.toLowerCase()) !== -1;
+        }
+
+        static getClosestBlockContainer(node) {
+            return Selection.traverseUp(node, function (node) {
+                return Selection.isBlockContainer(node);
+            });
+        }
+
+        static isElementAtBeginningOfBlock(node) {
+            var textVal,
+                sibling;
+            while (!Selection.isBlockContainer(node) && !Selection.isMediumEditorElement(node)) {
+                sibling = node;
+                while (sibling = sibling.previousSibling) {
+                    textVal = sibling.nodeType === 3 ? sibling.nodeValue : sibling.textContent;
+                    if (textVal.length > 0) {
+                        return false;
+                    }
+                }
+                node = node.parentNode;
+            }
+            return true;
+        }
+
+        static emptyElementNames() {
+          return ['br', 'col', 'colgroup', 'hr', 'img', 'input', 'source', 'wbr'];
+        }
+
+        static getFirstSelectableLeafNode(element) {
+            while (element && element.firstChild) {
+                element = element.firstChild;
+            }
+
+            // We don't want to set the selection to an element that can't have children, this messes up Gecko.
+            element = Selection.traverseUp(element, function (el) {
+                return Selection.emptyElementNames().indexOf(el.nodeName.toLowerCase()) === -1;
+            });
+            // Selecting at the beginning of a table doesn't work in PhantomJS.
+            if (element.nodeName.toLowerCase() === 'table') {
+                var firstCell = element.querySelector('th, td');
+                if (firstCell) {
+                    element = firstCell;
+                }
+            }
+            return element;
+        }
+    }
+
+    module.exports = Selection;

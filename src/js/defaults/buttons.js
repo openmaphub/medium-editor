@@ -1,10 +1,9 @@
-(function () {
-    'use strict';
+
 
     /* MediumEditor.extensions.button.defaults: [Object]
      * Set of default config options for all of the built-in MediumEditor buttons
      */
-    MediumEditor.extensions.button.prototype.defaults = {
+    var ButtonDefaults = {
         'bold': {
             name: 'bold',
             action: 'bold',
@@ -247,4 +246,4 @@
         }
     };
 
-})();
+    module.exports = ButtonDefaults;

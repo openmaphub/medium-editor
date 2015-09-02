@@ -19,43 +19,44 @@ LINK_REGEXP_TEXT =
     // Addition to above Regexp to support bare domains/one level subdomains with common non-i18n TLDs and without www prefix:
     ')|(([a-z0-9\\-]+\\.)?[a-z0-9\\-]+\\.(' + KNOWN_TLDS_FRAGMENT + '))';
 
-(function () {
-    'use strict';
 
     var KNOWN_TLDS_REGEXP = new RegExp('^(' + KNOWN_TLDS_FRAGMENT + ')$', 'i');
 
+    var Extension = require('../extension');
+    var Util = require('../util');
+
     function nodeIsNotInsideAnchorTag(node) {
-        return !MediumEditor.util.getClosestTag(node, 'a');
+        return !Util.getClosestTag(node, 'a');
     }
 
-    var AutoLink = MediumEditor.Extension.extend({
-        init: function () {
-            MediumEditor.Extension.prototype.init.apply(this, arguments);
+    class AutoLink extends Extension {
+      constructor(opts) {
+          super(opts);
 
-            this.disableEventHandling = false;
+            this.disableEventHandling = opts.disableEventHandling ? opts.disableEventHandling : false;
             this.subscribe('editableKeypress', this.onKeypress.bind(this));
             this.subscribe('editableBlur', this.onBlur.bind(this));
             // MS IE has it's own auto-URL detect feature but ours is better in some ways. Be consistent.
             this.document.execCommand('AutoUrlDetect', false, false);
-        },
+        }
 
-        destroy: function () {
+        destroy() {
             // Turn AutoUrlDetect back on
             if (this.document.queryCommandSupported('AutoUrlDetect')) {
                 this.document.execCommand('AutoUrlDetect', false, true);
             }
-        },
+        }
 
-        onBlur: function (blurEvent, editable) {
+        onBlur(blurEvent, editable) {
             this.performLinking(editable);
-        },
+        }
 
-        onKeypress: function (keyPressEvent) {
+        onKeypress(keyPressEvent) {
             if (this.disableEventHandling) {
                 return;
             }
 
-            if (MediumEditor.util.isKey(keyPressEvent, [MediumEditor.util.keyCode.SPACE, MediumEditor.util.keyCode.ENTER])) {
+            if (Util.isKey(keyPressEvent, [Util.keyCode().SPACE, Util.keyCode().ENTER])) {
                 clearTimeout(this.performLinkingTimeout);
                 // Saving/restoring the selection in the middle of a keypress doesn't work well...
                 this.performLinkingTimeout = setTimeout(function () {
@@ -74,15 +75,15 @@ LINK_REGEXP_TEXT =
                     }
                 }.bind(this), 0);
             }
-        },
+        }
 
-        performLinking: function (contenteditable) {
+        performLinking(contenteditable) {
             // Perform linking on a paragraph level basis as otherwise the detection can wrongly find the end
             // of one paragraph and the beginning of another paragraph to constitute a link, such as a paragraph ending
             // "link." and the next paragraph beginning with "my" is interpreted into "link.my" and the code tries to create
             // a link across blockElements - which doesn't work and is terrible.
             // (Medium deletes the spaces/returns between P tags so the textContent ends up without paragraph spacing)
-            var blockElements = contenteditable.querySelectorAll(MediumEditor.util.blockContainerElementNames.join(',')),
+            var blockElements = contenteditable.querySelectorAll(Util.blockContainerElementNames.join(',')),
                 documentModified = false;
             if (blockElements.length === 0) {
                 blockElements = [contenteditable];
@@ -92,35 +93,35 @@ LINK_REGEXP_TEXT =
                 documentModified = this.performLinkingWithinElement(blockElements[i]) || documentModified;
             }
             return documentModified;
-        },
+        }
 
-        removeObsoleteAutoLinkSpans: function (element) {
+        removeObsoleteAutoLinkSpans(element) {
             var spans = element.querySelectorAll('span[data-auto-link="true"]'),
                 documentModified = false;
 
             for (var i = 0; i < spans.length; i++) {
                 var textContent = spans[i].textContent;
                 if (textContent.indexOf('://') === -1) {
-                    textContent = MediumEditor.util.ensureUrlHasProtocol(textContent);
+                    textContent = Util.ensureUrlHasProtocol(textContent);
                 }
                 if (spans[i].getAttribute('data-href') !== textContent && nodeIsNotInsideAnchorTag(spans[i])) {
                     documentModified = true;
                     var trimmedTextContent = textContent.replace(/\s+$/, '');
                     if (spans[i].getAttribute('data-href') === trimmedTextContent) {
                         var charactersTrimmed = textContent.length - trimmedTextContent.length,
-                            subtree = MediumEditor.util.splitOffDOMTree(spans[i], this.splitTextBeforeEnd(spans[i], charactersTrimmed));
+                            subtree = Util.splitOffDOMTree(spans[i], this.splitTextBeforeEnd(spans[i], charactersTrimmed));
                         spans[i].parentNode.insertBefore(subtree, spans[i].nextSibling);
                     } else {
                         // Some editing has happened to the span, so just remove it entirely. The user can put it back
                         // around just the href content if they need to prevent it from linking
-                        MediumEditor.util.unwrap(spans[i], this.document);
+                        Util.unwrap(spans[i], this.document);
                     }
                 }
             }
             return documentModified;
-        },
+        }
 
-        splitTextBeforeEnd: function (element, characterCount) {
+        splitTextBeforeEnd(element, characterCount) {
             var treeWalker = this.document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false),
                 lastChildNotExhausted = true;
 
@@ -144,14 +145,14 @@ LINK_REGEXP_TEXT =
                 }
             }
             return previousNode;
-        },
+        }
 
-        performLinkingWithinElement: function (element) {
+        performLinkingWithinElement(element) {
             var matches = this.findLinkableText(element),
                 linkCreated = false;
 
             for (var matchIndex = 0; matchIndex < matches.length; matchIndex++) {
-                var matchingTextNodes = MediumEditor.util.findOrCreateMatchingTextNodes(this.document, element,
+                var matchingTextNodes = Util.findOrCreateMatchingTextNodes(this.document, element,
                         matches[matchIndex]);
                 if (this.shouldNotLink(matchingTextNodes)) {
                     continue;
@@ -159,21 +160,21 @@ LINK_REGEXP_TEXT =
                 this.createAutoLink(matchingTextNodes, matches[matchIndex].href);
             }
             return linkCreated;
-        },
+        }
 
-        shouldNotLink: function (textNodes) {
+        shouldNotLink(textNodes) {
             var shouldNotLink = false;
             for (var i = 0; i < textNodes.length && shouldNotLink === false; i++) {
                 // Do not link if the text node is either inside an anchor or inside span[data-auto-link]
-                shouldNotLink = !!MediumEditor.util.traverseUp(textNodes[i], function (node) {
+                shouldNotLink = !!Util.traverseUp(textNodes[i], function (node) {
                     return node.nodeName.toLowerCase() === 'a' ||
                         (node.getAttribute && node.getAttribute('data-auto-link') === 'true');
                 });
             }
             return shouldNotLink;
-        },
+        }
 
-        findLinkableText: function (contenteditable) {
+        findLinkableText(contenteditable) {
             var linkRegExp = new RegExp(LINK_REGEXP_TEXT, 'gi'),
                 textContent = contenteditable.textContent,
                 match = null,
@@ -198,11 +199,11 @@ LINK_REGEXP_TEXT =
                 }
             }
             return matches;
-        },
+        }
 
-        createAutoLink: function (textNodes, href) {
-            href = MediumEditor.util.ensureUrlHasProtocol(href);
-            var anchor = MediumEditor.util.createLink(this.document, textNodes, href, this.getEditorOption('targetBlank') ? '_blank' : null),
+        createAutoLink(textNodes, href) {
+            href = Util.ensureUrlHasProtocol(href);
+            var anchor = Util.createLink(this.document, textNodes, href, this.getEditorOption('targetBlank') ? '_blank' : null),
                 span = this.document.createElement('span');
             span.setAttribute('data-auto-link', 'true');
             span.setAttribute('data-href', href);
@@ -212,7 +213,6 @@ LINK_REGEXP_TEXT =
             }
         }
 
-    });
+    }
 
-    MediumEditor.extensions.autoLink = AutoLink;
-}());
+    module.exports = AutoLink;

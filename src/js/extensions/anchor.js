@@ -1,67 +1,69 @@
-(function () {
-    'use strict';
 
-    var AnchorForm = MediumEditor.extensions.form.extend({
-        /* Anchor Form Options */
+    var Util = require('../util');
+    var Form = require('./form');
+    var Selection = require('../selection');
+    class AnchorForm extends Form {
 
-        /* customClassOption: [string]  (previously options.anchorButton + options.anchorButtonClass)
-         * Custom class name the user can optionally have added to their created links (ie 'button').
-         * If passed as a non-empty string, a checkbox will be displayed allowing the user to choose
-         * whether to have the class added to the created link or not.
-         */
-        customClassOption: null,
+      constructor(opts) {
+          super(opts);
 
-        /* customClassOptionText: [string]
-         * text to be shown in the checkbox when the __customClassOption__ is being used.
-         */
-        customClassOptionText: 'Button',
+            /* Anchor Form Options */
 
-        /* linkValidation: [boolean]  (previously options.checkLinkFormat)
-         * enables/disables check for common URL protocols on anchor links.
-         */
-        linkValidation: false,
+            /* customClassOption: [string]  (previously options.anchorButton + options.anchorButtonClass)
+             * Custom class name the user can optionally have added to their created links (ie 'button').
+             * If passed as a non-empty string, a checkbox will be displayed allowing the user to choose
+             * whether to have the class added to the created link or not.
+             */
+            this.customClassOption = opts.customClassOption ? opts.customClassOption : null;
 
-        /* placeholderText: [string]  (previously options.anchorInputPlaceholder)
-         * text to be shown as placeholder of the anchor input.
-         */
-        placeholderText: 'Paste or type a link',
+            /* customClassOptionText: [string]
+             * text to be shown in the checkbox when the __customClassOption__ is being used.
+             */
+            this.customClassOptionText = opts.customClassOptionText ? opts.customClassOptionText : 'Button';
 
-        /* targetCheckbox: [boolean]  (previously options.anchorTarget)
-         * enables/disables displaying a "Open in new window" checkbox, which when checked
-         * changes the `target` attribute of the created link.
-         */
-        targetCheckbox: false,
+            /* linkValidation: [boolean]  (previously options.checkLinkFormat)
+             * enables/disables check for common URL protocols on anchor links.
+             */
+            this.linkValidation = opts.linkValidation ? opts.linkValidation : false;
 
-        /* targetCheckboxText: [string]  (previously options.anchorInputCheckboxLabel)
-         * text to be shown in the checkbox enabled via the __targetCheckbox__ option.
-         */
-        targetCheckboxText: 'Open in new window',
+            /* placeholderText: [string]  (previously options.anchorInputPlaceholder)
+             * text to be shown as placeholder of the anchor input.
+             */
+            this.placeholderText = opts.placeholderText ? opts.placeholderText : 'Paste or type a link';
 
-        // Options for the Button base class
-        name: 'anchor',
-        action: 'createLink',
-        aria: 'link',
-        tagNames: ['a'],
-        contentDefault: '<b>#</b>',
-        contentFA: '<i class="fa fa-link"></i>',
+            /* targetCheckbox: [boolean]  (previously options.anchorTarget)
+             * enables/disables displaying a "Open in new window" checkbox, which when checked
+             * changes the `target` attribute of the created link.
+             */
+            this.targetCheckbox = opts.targetCheckbox ? opts.targetCheckbox : false;
 
-        init: function () {
-            MediumEditor.extensions.form.prototype.init.apply(this, arguments);
+            /* targetCheckboxText: [string]  (previously options.anchorInputCheckboxLabel)
+             * text to be shown in the checkbox enabled via the __targetCheckbox__ option.
+             */
+            this.targetCheckboxText = opts.targetCheckboxText ? opts.targetCheckboxText : 'Open in new window';
+
+            // Options for the Button base class
+            this.name = 'anchor';
+            this.action = 'createLink';
+            this.aria = 'link';
+            this.tagNames = ['a'];
+            this.contentDefault = '<b>#</b>';
+            this.contentFA = '<i class="fa fa-link"></i>';
 
             this.subscribe('editableKeydown', this.handleKeydown.bind(this));
-        },
+        }
 
         // Called when the button the toolbar is clicked
         // Overrides ButtonExtension.handleClick
-        handleClick: function (event) {
+        handleClick(event) {
             event.preventDefault();
             event.stopPropagation();
 
-            var range = MediumEditor.selection.getSelectionRange(this.document);
+            var range = Selection.getSelectionRange(this.document);
 
             if (range.startContainer.nodeName.toLowerCase() === 'a' ||
                 range.endContainer.nodeName.toLowerCase() === 'a' ||
-                MediumEditor.util.getClosestTag(MediumEditor.selection.getSelectedParentElement(range), 'a')) {
+                Util.getClosestTag(Selection.getSelectedParentElement(range), 'a')) {
                 return this.execAction('unlink');
             }
 
@@ -70,24 +72,24 @@
             }
 
             return false;
-        },
+        }
 
         // Called when user hits the defined shortcut (CTRL / COMMAND + K)
-        handleKeydown: function (event) {
-            if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.K) && MediumEditor.util.isMetaCtrlKey(event) && !event.shiftKey) {
+        handleKeydown(event) {
+            if (Util.isKey(event, Util.keyCode().K) && Util.isMetaCtrlKey(event) && !event.shiftKey) {
                 this.handleClick(event);
             }
-        },
+        }
 
         // Called by medium-editor to append form to the toolbar
-        getForm: function () {
+        getForm() {
             if (!this.form) {
                 this.form = this.createForm();
             }
             return this.form;
-        },
+        }
 
-        getTemplate: function () {
+        getTemplate() {
             var template = [
                 '<input type="text" class="medium-editor-toolbar-input" placeholder="', this.placeholderText, '">'
             ];
@@ -133,24 +135,24 @@
 
             return template.join('');
 
-        },
+        }
 
         // Used by medium-editor when the default toolbar is to be displayed
-        isDisplayed: function () {
+        isDisplayed() {
             return this.getForm().style.display === 'block';
-        },
+        }
 
-        hideForm: function () {
+        hideForm() {
             this.getForm().style.display = 'none';
             this.getInput().value = '';
-        },
+        }
 
-        showForm: function (opts) {
+        showForm(opts) {
             var input = this.getInput(),
                 targetCheckbox = this.getAnchorTargetCheckbox(),
                 buttonCheckbox = this.getAnchorButtonCheckbox();
 
-            opts = opts || { url: '' };
+            opts = opts || {url: ''};
             // TODO: This is for backwards compatability
             // We don't need to support the 'string' argument in 6.0.0
             if (typeof opts === 'string') {
@@ -179,10 +181,10 @@
                 var classList = opts.buttonClass ? opts.buttonClass.split(' ') : [];
                 buttonCheckbox.checked = (classList.indexOf(this.customClassOption) !== -1);
             }
-        },
+        }
 
         // Called by core when tearing down medium-editor (destroy)
-        destroy: function () {
+        destroy() {
             if (!this.form) {
                 return false;
             }
@@ -192,11 +194,11 @@
             }
 
             delete this.form;
-        },
+        }
 
         // core methods
 
-        getFormOpts: function () {
+        getFormOpts() {
             // no notion of private functions? wanted `_getFormOpts`
             var targetCheckbox = this.getAnchorTargetCheckbox(),
                 buttonCheckbox = this.getAnchorButtonCheckbox(),
@@ -218,31 +220,31 @@
             }
 
             return opts;
-        },
+        }
 
-        doFormSave: function () {
+        doFormSave() {
             var opts = this.getFormOpts();
             this.completeFormSave(opts);
-        },
+        }
 
-        completeFormSave: function (opts) {
+        completeFormSave(opts) {
             this.base.restoreSelection();
             this.execAction(this.action, opts);
             this.base.checkSelection();
-        },
+        }
 
-        checkLinkFormat: function (value) {
+        checkLinkFormat(value) {
             var re = /^(https?|ftps?|rtmpt?):\/\/|mailto:/;
             return (re.test(value) ? '' : 'http://') + value;
-        },
+        }
 
-        doFormCancel: function () {
+        doFormCancel() {
             this.base.restoreSelection();
             this.base.checkSelection();
-        },
+        }
 
         // form creation and event handling
-        attachFormEvents: function (form) {
+        attachFormEvents(form) {
             var close = form.querySelector('.medium-editor-toolbar-close'),
                 save = form.querySelector('.medium-editor-toolbar-save'),
                 input = form.querySelector('.medium-editor-toolbar-input');
@@ -259,9 +261,9 @@
             // Handle save button clicks (capture)
             this.on(save, 'click', this.handleSaveClick.bind(this), true);
 
-        },
+        }
 
-        createForm: function () {
+        createForm() {
             var doc = this.document,
                 form = doc.createElement('div');
 
@@ -272,52 +274,51 @@
             this.attachFormEvents(form);
 
             return form;
-        },
+        }
 
-        getInput: function () {
+        getInput() {
             return this.getForm().querySelector('input.medium-editor-toolbar-input');
-        },
+        }
 
-        getAnchorTargetCheckbox: function () {
+        getAnchorTargetCheckbox() {
             return this.getForm().querySelector('.medium-editor-toolbar-anchor-target');
-        },
+        }
 
-        getAnchorButtonCheckbox: function () {
+        getAnchorButtonCheckbox() {
             return this.getForm().querySelector('.medium-editor-toolbar-anchor-button');
-        },
+        }
 
-        handleTextboxKeyup: function (event) {
+        handleTextboxKeyup(event) {
             // For ENTER -> create the anchor
-            if (event.keyCode === MediumEditor.util.keyCode.ENTER) {
+            if (event.keyCode === Util.keyCode().ENTER) {
                 event.preventDefault();
                 this.doFormSave();
                 return;
             }
 
             // For ESCAPE -> close the form
-            if (event.keyCode === MediumEditor.util.keyCode.ESCAPE) {
+            if (event.keyCode === Util.keyCode().ESCAPE) {
                 event.preventDefault();
                 this.doFormCancel();
             }
-        },
+        }
 
-        handleFormClick: function (event) {
+        handleFormClick(event) {
             // make sure not to hide form when clicking inside the form
             event.stopPropagation();
-        },
+        }
 
-        handleSaveClick: function (event) {
+        handleSaveClick(event) {
             // Clicking Save -> create the anchor
             event.preventDefault();
             this.doFormSave();
-        },
+        }
 
-        handleCloseClick: function (event) {
+        handleCloseClick(event) {
             // Click Close -> close the form
             event.preventDefault();
             this.doFormCancel();
         }
-    });
+    }
 
-    MediumEditor.extensions.anchor = AnchorForm;
-}());
+    module.exports = AnchorForm;

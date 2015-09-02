@@ -1,235 +1,231 @@
-(function () {
-    'use strict';
 
-    var Button = MediumEditor.Extension.extend({
+var Extension = require('../extension');
+var ButtonDefaults = require('../defaults').Buttons;
+class Button extends Extension{
+    // The button constructor can optionally accept the name of a built-in button
+    // (ie 'bold', 'italic', etc.)
+    // When the name of a button is passed, it will initialize itself with the
+    // configuration for that button
+    constructor(options) {
+      super(options);
 
-        /* Button Options */
+      if (options.name && Button.isBuiltInButton(options.name)) {
+          options = ButtonDefaults[options.name];
+      }
+      /* Button Options */
+      this.name = options.name ? options.name : undefined;
 
-        /* action: [string]
-         * The action argument to pass to MediumEditor.execAction()
-         * when the button is clicked
-         */
-        action: undefined,
 
-        /* aria: [string]
-         * The value to add as the aria-label attribute of the button
-         * element displayed in the toolbar.
-         * This is also used as the tooltip for the button
-         */
-        aria: undefined,
+      /* action: [string]
+       * The action argument to pass to MediumEditor.execAction()
+       * when the button is clicked
+       */
+      this.action = options.action ? options.action : undefined;
 
-        /* tagNames: [Array]
-         * NOTE: This is not used if useQueryState is set to true.
-         *
-         * Array of element tag names that would indicate that this
-         * button has already been applied. If this action has already
-         * been applied, the button will be displayed as 'active' in the toolbar
-         *
-         * Example:
-         * For 'bold', if the text is ever within a <b> or <strong>
-         * tag that indicates the text is already bold. So the array
-         * of tagNames for bold would be: ['b', 'strong']
-         */
-        tagNames: undefined,
+      /* aria: [string]
+       * The value to add as the aria-label attribute of the button
+       * element displayed in the toolbar.
+       * This is also used as the tooltip for the button
+       */
+      this.aria = options.aria ? options.aria : undefined;
 
-        /* style: [Object]
-         * NOTE: This is not used if useQueryState is set to true.
-         *
-         * A pair of css property & value(s) that indicate that this
-         * button has already been applied. If this action has already
-         * been applied, the button will be displayed as 'active' in the toolbar
-         * Properties of the object:
-         *   prop [String]: name of the css property
-         *   value [String]: value(s) of the css property
-         *                   multiple values can be separated by a '|'
-         *
-         * Example:
-         * For 'bold', if the text is ever within an element with a 'font-weight'
-         * style property set to '700' or 'bold', that indicates the text
-         * is already bold.  So the style object for bold would be:
-         * { prop: 'font-weight', value: '700|bold' }
-         */
-        style: undefined,
+      /* tagNames: [Array]
+       * NOTE: This is not used if useQueryState is set to true.
+       *
+       * Array of element tag names that would indicate that this
+       * button has already been applied. If this action has already
+       * been applied, the button will be displayed as 'active' in the toolbar
+       *
+       * Example:
+       * For 'bold', if the text is ever within a <b> or <strong>
+       * tag that indicates the text is already bold. So the array
+       * of tagNames for bold would be: ['b', 'strong']
+       */
+      this.tagNames = options.tagNames ? options.tagNames : undefined;
 
-        /* useQueryState: [boolean]
-         * Enables/disables whether this button should use the built-in
-         * document.queryCommandState() method to determine whether
-         * the action has already been applied.  If the action has already
-         * been applied, the button will be displayed as 'active' in the toolbar
-         *
-         * Example:
-         * For 'bold', if this is set to true, the code will call:
-         * document.queryCommandState('bold') which will return true if the
-         * browser thinks the text is already bold, and false otherwise
-         */
-        useQueryState: undefined,
+      /* style: [Object]
+       * NOTE: This is not used if useQueryState is set to true.
+       *
+       * A pair of css property & value(s) that indicate that this
+       * button has already been applied. If this action has already
+       * been applied, the button will be displayed as 'active' in the toolbar
+       * Properties of the object:
+       *   prop [String]: name of the css property
+       *   value [String]: value(s) of the css property
+       *                   multiple values can be separated by a '|'
+       *
+       * Example:
+       * For 'bold', if the text is ever within an element with a 'font-weight'
+       * style property set to '700' or 'bold', that indicates the text
+       * is already bold.  So the style object for bold would be:
+       * { prop: 'font-weight', value: '700|bold' }
+       */
+      this.style = options.style ? options.style : undefined;
 
-        /* contentDefault: [string]
-         * Default innerHTML to put inside the button
-         */
-        contentDefault: undefined,
+      /* useQueryState: [boolean]
+       * Enables/disables whether this button should use the built-in
+       * document.queryCommandState() method to determine whether
+       * the action has already been applied.  If the action has already
+       * been applied, the button will be displayed as 'active' in the toolbar
+       *
+       * Example:
+       * For 'bold', if this is set to true, the code will call:
+       * document.queryCommandState('bold') which will return true if the
+       * browser thinks the text is already bold, and false otherwise
+       */
+      this.useQueryState = options.useQueryState ? options.useQueryState : undefined;
 
-        /* contentFA: [string]
-         * The innerHTML to use for the content of the button
-         * if the `buttonLabels` option for MediumEditor is set to 'fontawesome'
-         */
-        contentFA: undefined,
+      /* contentDefault: [string]
+       * Default innerHTML to put inside the button
+       */
+      this.contentDefault = options.contentDefault ? options.contentDefault : undefined;
 
-        /* classList: [Array]
-         * An array of classNames (strings) to be added to the button
-         */
-        classList: undefined,
+      /* contentFA: [string]
+       * The innerHTML to use for the content of the button
+       * if the `buttonLabels` option for MediumEditor is set to 'fontawesome'
+       */
+      this.contentFA = options.contentFA ? options.contentFA : undefined;
 
-        /* attrs: [object]
-         * A set of key-value pairs to add to the button as custom attributes
-         */
-        attrs: undefined,
+      /* classList: [Array]
+       * An array of classNames (strings) to be added to the button
+       */
+      this.classList = options.classList ? options.classList : undefined;
 
-        // The button constructor can optionally accept the name of a built-in button
-        // (ie 'bold', 'italic', etc.)
-        // When the name of a button is passed, it will initialize itself with the
-        // configuration for that button
-        constructor: function (options) {
-            if (Button.isBuiltInButton(options)) {
-                MediumEditor.Extension.call(this, this.defaults[options]);
-            } else {
-                MediumEditor.Extension.call(this, options);
-            }
-        },
+      /* attrs: [object]
+       * A set of key-value pairs to add to the button as custom attributes
+       */
+      this.attrs = options.attrs ? options.attrs : undefined;
 
-        init: function () {
-            MediumEditor.Extension.prototype.init.apply(this, arguments);
+      this.button = this.createButton();
+      this.on(this.button, 'click', this.handleClick.bind(this));
+    }
 
-            this.button = this.createButton();
-            this.on(this.button, 'click', this.handleClick.bind(this));
-        },
 
-        /* getButton: [function ()]
-         *
-         * If implemented, this function will be called when
-         * the toolbar is being created.  The DOM Element returned
-         * by this function will be appended to the toolbar along
-         * with any other buttons.
-         */
-        getButton: function () {
-            return this.button;
-        },
+    /* getButton: [function ()]
+     *
+     * If implemented, this function will be called when
+     * the toolbar is being created.  The DOM Element returned
+     * by this function will be appended to the toolbar along
+     * with any other buttons.
+     */
+    getButton() {
+        return this.button;
+    }
 
-        getAction: function () {
-            return (typeof this.action === 'function') ? this.action(this.base.options) : this.action;
-        },
+    getAction() {
+        return (typeof this.action === 'function') ? this.action(this.base.options) : this.action;
+    }
 
-        getAria: function () {
-            return (typeof this.aria === 'function') ? this.aria(this.base.options) : this.aria;
-        },
+    getAria() {
+        return (typeof this.aria === 'function') ? this.aria(this.base.options) : this.aria;
+    }
 
-        getTagNames: function () {
-            return (typeof this.tagNames === 'function') ? this.tagNames(this.base.options) : this.tagNames;
-        },
+    getTagNames() {
+        return (typeof this.tagNames === 'function') ? this.tagNames(this.base.options) : this.tagNames;
+    }
 
-        createButton: function () {
-            var button = this.document.createElement('button'),
-                content = this.contentDefault,
-                ariaLabel = this.getAria(),
-                buttonLabels = this.getEditorOption('buttonLabels');
-            // Add class names
-            button.classList.add('medium-editor-action');
-            button.classList.add('medium-editor-action-' + this.name);
-            if (this.classList) {
-                this.classList.forEach(function (className) {
-                    button.classList.add(className);
-                });
-            }
-
-            // Add attributes
-            button.setAttribute('data-action', this.getAction());
-            if (ariaLabel) {
-                button.setAttribute('title', ariaLabel);
-                button.setAttribute('aria-label', ariaLabel);
-            }
-            if (this.attrs) {
-                Object.keys(this.attrs).forEach(function (attr) {
-                    button.setAttribute(attr, this.attrs[attr]);
-                }, this);
-            }
-
-            if (buttonLabels === 'fontawesome' && this.contentFA) {
-                content = this.contentFA;
-            }
-            button.innerHTML = content;
-            return button;
-        },
-
-        handleClick: function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            var action = this.getAction();
-
-            if (action) {
-                this.execAction(action);
-            }
-        },
-
-        isActive: function () {
-            return this.button.classList.contains(this.getEditorOption('activeButtonClass'));
-        },
-
-        setInactive: function () {
-            this.button.classList.remove(this.getEditorOption('activeButtonClass'));
-            delete this.knownState;
-        },
-
-        setActive: function () {
-            this.button.classList.add(this.getEditorOption('activeButtonClass'));
-            delete this.knownState;
-        },
-
-        queryCommandState: function () {
-            var queryState = null;
-            if (this.useQueryState) {
-                queryState = this.base.queryCommandState(this.getAction());
-            }
-            return queryState;
-        },
-
-        isAlreadyApplied: function (node) {
-            var isMatch = false,
-                tagNames = this.getTagNames(),
-                styleVals,
-                computedStyle;
-
-            if (this.knownState === false || this.knownState === true) {
-                return this.knownState;
-            }
-
-            if (tagNames && tagNames.length > 0) {
-                isMatch = tagNames.indexOf(node.nodeName.toLowerCase()) !== -1;
-            }
-
-            if (!isMatch && this.style) {
-                styleVals = this.style.value.split('|');
-                computedStyle = this.window.getComputedStyle(node, null).getPropertyValue(this.style.prop);
-                styleVals.forEach(function (val) {
-                    if (!this.knownState) {
-                        isMatch = (computedStyle.indexOf(val) !== -1);
-                        // text-decoration is not inherited by default
-                        // so if the computed style for text-decoration doesn't match
-                        // don't write to knownState so we can fallback to other checks
-                        if (isMatch || this.style.prop !== 'text-decoration') {
-                            this.knownState = isMatch;
-                        }
-                    }
-                }, this);
-            }
-
-            return isMatch;
+    createButton() {
+        var button = this.document.createElement('button'),
+            content = this.contentDefault,
+            ariaLabel = this.getAria(),
+            buttonLabels = this.getEditorOption('buttonLabels');
+        // Add class names
+        button.classList.add('medium-editor-action');
+        button.classList.add('medium-editor-action-' + this.name);
+        if (this.classList) {
+            this.classList.forEach(function (className) {
+                button.classList.add(className);
+            });
         }
-    });
 
-    Button.isBuiltInButton = function (name) {
-        return (typeof name === 'string') && MediumEditor.extensions.button.prototype.defaults.hasOwnProperty(name);
-    };
+        // Add attributes
+        button.setAttribute('data-action', this.getAction());
+        if (ariaLabel) {
+            button.setAttribute('title', ariaLabel);
+            button.setAttribute('aria-label', ariaLabel);
+        }
+        if (this.attrs) {
+            Object.keys(this.attrs).forEach(function (attr) {
+                button.setAttribute(attr, this.attrs[attr]);
+            }, this);
+        }
 
-    MediumEditor.extensions.button = Button;
-}());
+        if (buttonLabels === 'fontawesome' && this.contentFA) {
+            content = this.contentFA;
+        }
+        button.innerHTML = content;
+        return button;
+    }
+
+    handleClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var action = this.getAction();
+
+        if (action) {
+            this.execAction(action);
+        }
+    }
+
+    isActive() {
+        return this.button.classList.contains(this.getEditorOption('activeButtonClass'));
+    }
+
+    setInactive() {
+        this.button.classList.remove(this.getEditorOption('activeButtonClass'));
+        delete this.knownState;
+    }
+
+    setActive() {
+        this.button.classList.add(this.getEditorOption('activeButtonClass'));
+        delete this.knownState;
+    }
+
+    queryCommandState() {
+        var queryState = null;
+        if (this.useQueryState) {
+            queryState = this.base.queryCommandState(this.getAction());
+        }
+        return queryState;
+    }
+
+    isAlreadyApplied(node) {
+        var isMatch = false,
+            tagNames = this.getTagNames(),
+            styleVals,
+            computedStyle;
+
+        if (this.knownState === false || this.knownState === true) {
+            return this.knownState;
+        }
+
+        if (tagNames && tagNames.length > 0) {
+            isMatch = tagNames.indexOf(node.nodeName.toLowerCase()) !== -1;
+        }
+
+        if (!isMatch && this.style) {
+            styleVals = this.style.value.split('|');
+            computedStyle = this.window.getComputedStyle(node, null).getPropertyValue(this.style.prop);
+            styleVals.forEach(function (val) {
+                if (!this.knownState) {
+                    isMatch = (computedStyle.indexOf(val) !== -1);
+                    // text-decoration is not inherited by default
+                    // so if the computed style for text-decoration doesn't match
+                    // don't write to knownState so we can fallback to other checks
+                    if (isMatch || this.style.prop !== 'text-decoration') {
+                        this.knownState = isMatch;
+                    }
+                }
+            }, this);
+        }
+
+        return isMatch;
+    }
+
+    static isBuiltInButton = function (name) {
+        return (typeof name === 'string') && ButtonDefaults[name] !== undefined;
+    }
+}
+
+module.exports = Button;
