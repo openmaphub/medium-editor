@@ -1,10 +1,17 @@
-﻿# MediumEditor
+﻿# MediumEditor (React ES6 Fork)
 
-[![Join the chat at https://gitter.im/yabwe/medium-editor](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/yabwe/medium-editor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+This is a fork of the awesome https://github.com/yabwe/medium-editor hacked to work with React server-side/isomorphic rendering.
+
+As part of this I've done some additional refactoring:
+* Now uses Node CommonJS require statements
+* Refactored to ES6 classes
+
+Still works out of the box with https://github.com/wangzuo/react-medium-editor as long as you are using something like Babel to transpile the ES6 code.
+
+Note: Everything below this line is directly from the source project and may not apply to this fork...
+--------------------------------------------------------------
 
 This is a clone of [medium.com](https://medium.com) inline editor toolbar.
-
-MediumEditor has been written using vanilla JavaScript, no additional frameworks required.
 
 ## Browser Support
 
