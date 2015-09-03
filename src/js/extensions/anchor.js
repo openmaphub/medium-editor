@@ -5,6 +5,15 @@
     class AnchorForm extends Form {
 
       constructor(opts) {
+
+        // Options for the Button base class
+        opts.name = 'anchor';
+        opts.action = 'createLink';
+        opts.aria = 'link';
+        opts.tagNames = ['a'];
+        opts.contentDefault = '<b>#</b>';
+        opts.contentFA = '<i class="fa fa-link"></i>';
+
           super(opts);
 
             /* Anchor Form Options */
@@ -42,13 +51,7 @@
              */
             this.targetCheckboxText = opts.targetCheckboxText ? opts.targetCheckboxText : 'Open in new window';
 
-            // Options for the Button base class
-            this.name = 'anchor';
-            this.action = 'createLink';
-            this.aria = 'link';
-            this.tagNames = ['a'];
-            this.contentDefault = '<b>#</b>';
-            this.contentFA = '<i class="fa fa-link"></i>';
+
 
             this.subscribe('editableKeydown', this.handleKeydown.bind(this));
         }
