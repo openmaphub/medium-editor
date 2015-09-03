@@ -47,8 +47,9 @@ class Extension {
        * If implemented, this function will be called when MediumEditor's
        * destroy method has been called.
        */
-      this.destroy = options.destroy ? options.destroy : undefined;
-
+       if(options.destroy){
+         this.destroy = options.destroy;
+       }
       /* As alternatives to checkState, these functions provide a more structured
        * path to updating the state of an extension (usually a button) whenever
        * the state of the editor & toolbar are updated.
@@ -65,7 +66,9 @@ class Extension {
        * If this function returns true, and the setActive() function is defined
        * setActive() will be called
        */
-      this.queryCommandState = options.queryCommandState ? options.queryCommandState : undefined;
+      if(options.queryCommandState){
+        this.queryCommandState = options.queryCommandState;
+      }
 
       /* isActive: [function ()]
        *
@@ -75,8 +78,9 @@ class Extension {
        * but only if queryCommandState() or isAlreadyApplied() functions
        * are implemented, and when called, return true.
        */
-      this.isActive = options.isActive ? options.isActive : undefined;
-
+       if(options.isActive){
+         this.isActive = options.isActive;
+      }
       /* isAlreadyApplied: [function (node)]
        *
        * If implemented, this function is similar to checkState() in
@@ -88,8 +92,9 @@ class Extension {
        * queryCommandState() is implemented and returns a non-null
        * value when called
        */
-      this.isAlreadyApplied = options.isAlreadyApplied ? options.isAlreadyApplied : undefined;
-
+      if(options.isAlreadyApplied){
+         this.isAlreadyApplied = options.isAlreadyApplied;
+      }
       /* setActive: [function ()]
        *
        * If implemented, this function is called when MediumEditor knows
@@ -98,8 +103,9 @@ class Extension {
        * only if queryCommandState() or isAlreadyApplied(node) return
        * true when called
        */
-      this.setActive = options.setActive ? options.setActive : undefined;
-
+       if(options.setActive){
+         this.setActive = options.setActive;
+       }
       /* setInactive: [function ()]
        *
        * If implemented, this function is called when MediumEditor knows
@@ -110,7 +116,9 @@ class Extension {
        * or the combination of queryCommandState(), isAlreadyApplied(node),
        * isActive(), and setActive()
        */
-      this.setInactive = options.setInactive ? options.setInactive : undefined;
+       if(options.setActive){
+         this.setInactive = options.setInactive;
+       }
 
       /************************ Helpers ************************
        * The following are helpers that are either set by MediumEditor

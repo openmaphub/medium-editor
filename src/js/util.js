@@ -219,7 +219,7 @@ class Util {
      *
      * This function is intended to be called from Util.findOrCreateMatchingTextNodes.
      */
-    splitEndNodeIfNeeded(currentNode, newNode, matchEndIndex, currentTextIndex) {
+    static splitEndNodeIfNeeded(currentNode, newNode, matchEndIndex, currentTextIndex) {
         var textIndexOfEndOfFarthestNode,
             endSplitPoint;
         textIndexOfEndOfFarthestNode = currentTextIndex + (newNode || currentNode).nodeValue.length +

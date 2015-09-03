@@ -502,7 +502,7 @@
                 return Selection.emptyElementNames().indexOf(el.nodeName.toLowerCase()) === -1;
             });
             // Selecting at the beginning of a table doesn't work in PhantomJS.
-            if (element.nodeName.toLowerCase() === 'table') {
+            if (element && element.nodeName.toLowerCase() === 'table') {
                 var firstCell = element.querySelector('th, td');
                 if (firstCell) {
                     element = firstCell;
