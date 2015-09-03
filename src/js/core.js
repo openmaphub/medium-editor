@@ -158,34 +158,34 @@ var Defaults = require('./defaults');
 
             switch (name) {
                 case 'anchor':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), this.options.anchor, opts);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), this.options.anchor, opts);
                     extension = new Extensions.Anchor(mergedOpts);
                     break;
                 case 'anchor-preview':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), this.options.anchorPreview);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), this.options.anchorPreview);
                     extension = new Extensions.AnchorPreview(mergedOpts);
                     break;
                 case 'autoLink':
-                    extension = new Extensions.AutoLink(this.getExtenionDefaults());
+                    extension = new Extensions.AutoLink(this.getExtensionDefaults());
                     break;
                 case 'fileDragging':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), opts);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), opts);
                     extension = new Extensions.FileDragging(mergedOpts);
                     break;
                 case 'fontsize':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), opts);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), opts);
                     extension = new Extensions.FontSize(mergedOpts);
                     break;
                 case 'keyboardCommands':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), this.options.keyboardCommands);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), this.options.keyboardCommands);
                     extension = new Extensions.KeyboardCommands(mergedOpts);
                     break;
                 case 'paste':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), this.options.paste);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), this.options.paste);
                     extension = new Extensions.Paste(mergedOpts);
                     break;
                 case 'placeholder':
-                    mergedOpts = Util.extend({}, this.getExtenionDefaults(), this.options.placeholder);
+                    mergedOpts = Util.extend({}, this.getExtensionDefaults(), this.options.placeholder);
                     extension = new Extensions.Placeholder(mergedOpts);
                     break;
                 default:
@@ -193,10 +193,10 @@ var Defaults = require('./defaults');
                     // so check to see if the extension we're creating is a built-in button
                     if (Extensions.Button.isBuiltInButton(name)) {
                         if (opts) {
-                            mergedOpts = Util.defaults({}, this.getExtenionDefaults(), opts, MediumEditor.extensions.button.prototype.defaults[name]);
+                            mergedOpts = Util.defaults({}, this.getExtensionDefaults(), opts, MediumEditor.extensions.button.prototype.defaults[name]);
                             extension = new Extensions.Button(mergedOpts);
                         } else {
-                            mergedOpts = Util.defaults({}, this.getExtenionDefaults(), {name});
+                            mergedOpts = Util.defaults({}, this.getExtensionDefaults(), {name});
                             extension = new Extensions.Button(mergedOpts);
                         }
                     }
@@ -724,7 +724,7 @@ var Defaults = require('./defaults');
             return extension;
         }
 */
-        getExtenionDefaults(){
+        getExtensionDefaults(){
           return {
               'window': this.options.contentWindow,
               'document': this.options.ownerDocument,
@@ -947,7 +947,7 @@ var Defaults = require('./defaults');
             var toolbarExtension = this.options.extensions['toolbar'];
             if (!toolbarExtension && this.isToolbarEnabled.call(this)) {
                 // Backwards compatability
-                var toolbarOptions = Util.extend({}, this.getExtenionDefaults(), this.options.toolbar, {
+                var toolbarOptions = Util.extend({}, this.getExtensionDefaults(), this.options, this.options.toolbar, {
                     allowMultiParagraphSelection: this.options.allowMultiParagraphSelection // deprecated
                 });
                 toolbarExtension = new Extensions.Toolbar(toolbarOptions);
