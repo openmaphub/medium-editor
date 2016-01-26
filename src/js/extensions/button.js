@@ -225,7 +225,7 @@ class Button extends Extension{
 
     static isBuiltInButton = function (name) {
         return (typeof name === 'string') && ButtonDefaults[name] !== undefined;
-    }
+    };
 }
 
 module.exports = Button;
